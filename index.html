@@ -4,93 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        :root {
-            --header-bg: #1a2e44; /* اللون الداكن لرأس الجدول */
-            --green-btn: #28a745;
-            --table-border: #dee2e6;
-            --text-dark: #333;
-        }
+        :root { --header-bg: #1a2e44; --green-btn: #28a745; --border: #dee2e6; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; background: transparent; }
+        
+        /* تنسيق القوائم المنسدلة */
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid var(--border); font-size: 1em; width: 150px; cursor: pointer; }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background-color: transparent; /* ليتناسب مع خلفية كانفا */
-            margin: 0;
-            padding: 10px;
-        }
-
-        .table-container {
-            width: 100%;
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            border-radius: 4px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: center;
-        }
-
-        thead {
-            background-color: var(--header-bg);
-            color: white;
-        }
-
-        th {
-            padding: 15px 10px;
-            font-weight: bold;
-            border: 1px solid var(--table-border);
-        }
-
-        td {
-            padding: 12px 10px;
-            border: 1px solid var(--table-border);
-            color: var(--text-dark);
-            vertical-align: middle;
-            font-size: 0.95em;
-        }
-
-        /* زر الدخول الأخضر مثل الصورة */
-        .btn-entry {
-            display: inline-block;
-            background-color: var(--green-btn);
-            color: white;
-            text-decoration: none;
-            padding: 5px 15px;
-            border-radius: 3px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .btn-entry:hover {
-            background-color: #218838;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        #loading {
-            text-align: center;
-            padding: 30px;
-            color: var(--header-bg);
-            font-weight: bold;
-        }
-
-        /* تنسيق خاص لاسم المادة */
-        .subject-cell {
-            font-weight: bold;
-            color: #000;
-            text-align: right;
-            padding-right: 20px;
-        }
+        .table-container { width: 100%; max-width: 900px; margin: auto; background: white; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        thead { background-color: var(--header-bg); color: white; }
+        th, td { padding: 12px; border: 1px solid var(--border); }
+        .btn-entry { background: var(--green-btn); color: white; text-decoration: none; padding: 5px 15px; border-radius: 3px; font-weight: bold; }
+        #no-data { padding: 20px; text-align: center; display: none; color: #666; }
     </style>
 </head>
 <body>
 
+    <div class="controls">
+        <select id="classFilter" onchange="filterData()">
+            <option value="">اختر الصف</option>
+            <option value="العاشر">العاشر</option>
+              <option value="التاسع">التاسع</option>
+              <option value="الثامن">الثامن</option>
+              <option value="السابع">السابع</option>
+              <option value="السادس">السادس</option>
+              <option value="الخامس">الخامس</option>
+              <option value="الرابع">الرابع</option>
+              <option value="الثالث">الثالث</option>
+              <option value="الثاني">الثاني</option>
+              <option value="الأول">الأول</option>
+        </select>
+
+        <select id="dayFilter" onchange="filterData()">
+            <option value="">اختر اليوم</option>
+            <option value="الأحد">الأحد</option>
+            <option value="الاثنين">الاثنين</option>
+            <option value="الثلاثاء">الثلاثاء</option>
+            <option value="الأربعاء">الأربعاء</option>
+            <option value="الخميس">الخميس</option>
+        </select>
+    </div>
+
     <div class="table-container">
-        <div id="loading">جاري مزامنة الجدول مع Google Sheets...</div>
-        <table id="schedule-table" style="display: none;">
+        <table id="schedule-table">
             <thead>
                 <tr>
                     <th>المبحث</th>
@@ -100,50 +57,60 @@
                     <th>رابط</th>
                 </tr>
             </thead>
-            <tbody id="table-body">
-                </tbody>
+            <tbody id="table-body"></tbody>
         </table>
+        <div id="no-data">لا توجد حصص للمدخلات المختارة</div>
     </div>
 
     <script>
-        // ضع رابط الـ CSV المباشر من Google Sheets هنا
         const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8Yk6Sq2bCZtlrH-mgqDZFYnRc54MYf8vAW6VIpW1WHIzKi5lkoBRTXjv5i8sXBkHMrbR_KHS-kMoV/pub?gid=0&single=true&output=csv";
+        let allData = [];
 
         async function loadData() {
             try {
                 const response = await fetch(csvUrl);
-                const data = await response.text();
-                const rows = data.split('\n').slice(1);
-                
-                const tableBody = document.getElementById('table-body');
-                const table = document.getElementById('schedule-table');
-                const loading = document.getElementById('loading');
-                
-                tableBody.innerHTML = '';
+                const text = await response.text();
+                const rows = text.split('\n').slice(1);
+                allData = rows.map(row => row.split(','));
+                filterData(); // العرض الأولي
+            } catch (e) { console.error("Error loading data"); }
+        }
 
-                rows.forEach((row, index) => {
-                    const col = row.split(',');
-                    // الترتيب: [0]المعلم، [1]المادة، [2]الصف، [3]الفترة، [4]بدء، [5]نهاية، [6]الرابط
-                    if (col.length >= 7 && col[1].trim() !== "") {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td class="subject-cell">${index + 1}- ${col[1]}</td>
-                            <td>${col[0]}</td>
-                            <td dir="ltr">${col[4]}</td>
-                            <td dir="ltr">${col[5]}</td>
-                            <td>
-                                <a href="${col[6].trim()}" target="_blank" class="btn-entry">دخول</a>
-                            </td>
+        function filterData() {
+            const selectedClass = document.getElementById('classFilter').value;
+            const selectedDay = document.getElementById('dayFilter').value;
+            const tableBody = document.getElementById('table-body');
+            const noData = document.getElementById('no-data');
+            
+            tableBody.innerHTML = '';
+            let hasResults = false;
+
+            allData.forEach((col) => {
+                if (col.length >= 7) {
+                    const rowClass = col[2]?.trim();
+                    const rowDay = col[3]?.trim();
+
+                    // شرط الفلترة: إذا كان الاختيار يطابق البيانات أو إذا كانت القائمة فارغة
+                    const classMatch = !selectedClass || rowClass === selectedClass;
+                    const dayMatch = !selectedDay || rowDay === selectedDay;
+
+                    if (classMatch && dayMatch && col[1]) {
+                        hasResults = true;
+                        tableBody.innerHTML += `
+                            <tr>
+                                <td style="font-weight:bold">${col[1]}</td>
+                                <td>${col[0]}</td>
+                                <td dir="ltr">${col[4]}</td>
+                                <td dir="ltr">${col[5]}</td>
+                                <td><a href="${col[6].trim()}" target="_blank" class="btn-entry">دخول</a></td>
+                            </tr>
                         `;
-                        tableBody.appendChild(tr);
                     }
-                });
+                }
+            });
 
-                loading.style.display = 'none';
-                table.style.display = 'table';
-            } catch (error) {
-                document.getElementById('loading').innerText = "خطأ: تأكد من صلاحيات رابط Google Sheets";
-            }
+            noData.style.display = hasResults ? 'none' : 'block';
+            document.getElementById('schedule-table').style.display = hasResults ? 'table' : 'none';
         }
 
         loadData();
