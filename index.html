@@ -4,36 +4,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        :root { --header-bg: #1a2e44; --green-btn: #28a745; --border: #dee2e6; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 15px; background: transparent; }
-        
-        /* تنسيق القوائم المنسدلة */
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid var(--border); font-size: 1em; width: 150px; cursor: pointer; }
+        :root {
+            --header-bg: #1a2e44;
+            --green-btn: #28a745;
+            --border: #dee2e6;
+            --highlight: #f8f9fa;
+        }
 
-        .table-container { width: 100%; max-width: 900px; margin: auto; background: white; border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 10px; background: transparent; }
+
+        /* تنسيق العداد التنازلي */
+        .timer-container {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-bottom: 15px;
+            border: 1px solid #ffeeba;
+            font-weight: bold;
+        }
+
+        /* تنسيق القوائم المنسدلة */
+        .controls { display: flex; gap: 15px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        select { 
+            padding: 10px; border-radius: 5px; border: 2px solid var(--header-bg); 
+            font-size: 1em; width: 180px; background: white; cursor: pointer;
+        }
+
+        .table-container { 
+            width: 100%; max-width: 950px; margin: auto; background: white; 
+            border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow-x: auto; 
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: center; min-width: 600px; }
         thead { background-color: var(--header-bg); color: white; }
         th, td { padding: 12px; border: 1px solid var(--border); }
-        .btn-entry { background: var(--green-btn); color: white; text-decoration: none; padding: 5px 15px; border-radius: 3px; font-weight: bold; }
-        #no-data { padding: 20px; text-align: center; display: none; color: #666; }
+        
+        .btn-entry { 
+            background: var(--green-btn); color: white; text-decoration: none; 
+            padding: 6px 18px; border-radius: 4px; font-weight: bold; display: inline-block;
+        }
+
+        .current-row { background-color: #e8f4fd !important; font-weight: bold; }
+        #no-data { padding: 30px; text-align: center; display: none; color: #777; font-size: 1.1em; }
     </style>
 </head>
 <body>
 
+    <div id="countdown-banner" class="timer-container" style="display: none;">
+        المتبقي على نهاية الحصة الحالية: <span id="timer-display">--:--</span>
+    </div>
+
     <div class="controls">
         <select id="classFilter" onchange="filterData()">
-            <option value="">اختر الصف</option>
+            <option value="">اختر الصف الدراسي</option>
             <option value="العاشر">العاشر</option>
-              <option value="التاسع">التاسع</option>
-              <option value="الثامن">الثامن</option>
-              <option value="السابع">السابع</option>
-              <option value="السادس">السادس</option>
-              <option value="الخامس">الخامس</option>
-              <option value="الرابع">الرابع</option>
-              <option value="الثالث">الثالث</option>
-              <option value="الثاني">الثاني</option>
-              <option value="الأول">الأول</option>
+            <option value="التاسع">التاسع</option>
+            <option value="الثامن">الثامن</option>
+            <option value="السابع">السابع</option>
+            <option value="السادس">السادس</option>
+            <option value="الخامس">الخامس</option>
+            <option value="الرابع">الرابع</option>
+            <option value="الثالث">الثالث</option>
+            <option value="الثاني">الثاني</option>
+            <option value="الأول">الأول</option>
+            <option value="الثامن">الثامن</option>
+
         </select>
 
         <select id="dayFilter" onchange="filterData()">
@@ -59,11 +96,11 @@
             </thead>
             <tbody id="table-body"></tbody>
         </table>
-        <div id="no-data">لا توجد حصص للمدخلات المختارة</div>
+        <div id="no-data">يرجى اختيار الصف واليوم لعرض الجدول</div>
     </div>
 
     <script>
-        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8Yk6Sq2bCZtlrH-mgqDZFYnRc54MYf8vAW6VIpW1WHIzKi5lkoBRTXjv5i8sXBkHMrbR_KHS-kMoV/pub?gid=0&single=true&output=csv";
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8Yk6Sq2bCZtlrH-mgqDZFYnRc54MYf8vAW6VIpW1WHIzKi5lkoBRTXjv5i8sXBkHMrbR_KHS-kMoV/pub?gid=0&single=true&output=csv"; 
         let allData = [];
 
         async function loadData() {
@@ -72,8 +109,9 @@
                 const text = await response.text();
                 const rows = text.split('\n').slice(1);
                 allData = rows.map(row => row.split(','));
-                filterData(); // العرض الأولي
-            } catch (e) { console.error("Error loading data"); }
+                filterData();
+                setInterval(updateTimer, 1000); // تحديث العداد كل ثانية
+            } catch (e) { document.getElementById('no-data').innerText = "خطأ في تحميل البيانات."; }
         }
 
         function filterData() {
@@ -85,20 +123,16 @@
             tableBody.innerHTML = '';
             let hasResults = false;
 
-            allData.forEach((col) => {
+            allData.forEach((col, index) => {
                 if (col.length >= 7) {
                     const rowClass = col[2]?.trim();
                     const rowDay = col[3]?.trim();
 
-                    // شرط الفلترة: إذا كان الاختيار يطابق البيانات أو إذا كانت القائمة فارغة
-                    const classMatch = !selectedClass || rowClass === selectedClass;
-                    const dayMatch = !selectedDay || rowDay === selectedDay;
-
-                    if (classMatch && dayMatch && col[1]) {
+                    if ((!selectedClass || rowClass === selectedClass) && (!selectedDay || rowDay === selectedDay) && col[1]) {
                         hasResults = true;
                         tableBody.innerHTML += `
-                            <tr>
-                                <td style="font-weight:bold">${col[1]}</td>
+                            <tr id="row-${index}">
+                                <td style="text-align:right; font-weight:bold;">${index+1}- ${col[1]}</td>
                                 <td>${col[0]}</td>
                                 <td dir="ltr">${col[4]}</td>
                                 <td dir="ltr">${col[5]}</td>
@@ -111,6 +145,30 @@
 
             noData.style.display = hasResults ? 'none' : 'block';
             document.getElementById('schedule-table').style.display = hasResults ? 'table' : 'none';
+        }
+
+        function updateTimer() {
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+            let activeTimer = false;
+
+            allData.forEach(col => {
+                if (col[4] && col[5]) {
+                    const [startH, startM] = col[4].split(':').map(Number);
+                    const [endH, endM] = col[5].split(':').map(Number);
+                    const startTime = startH * 60 + startM;
+                    const endTime = endH * 60 + endM;
+
+                    if (currentTime >= startTime && currentTime < endTime) {
+                        activeTimer = true;
+                        const diff = endTime - currentTime;
+                        document.getElementById('timer-display').innerText = diff + " دقيقة";
+                        document.getElementById('countdown-banner').style.display = 'block';
+                    }
+                }
+            });
+
+            if (!activeTimer) document.getElementById('countdown-banner').style.display = 'none';
         }
 
         loadData();
