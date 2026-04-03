@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --header-bg: #1a2e44; /* اللون الداكن لرأس الجدول */
+            --green-btn: #28a745;
+            --table-border: #dee2e6;
+            --text-dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: transparent; /* ليتناسب مع خلفية كانفا */
+            margin: 0;
+            padding: 10px;
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        thead {
+            background-color: var(--header-bg);
+            color: white;
+        }
+
+        th {
+            padding: 15px 10px;
+            font-weight: bold;
+            border: 1px solid var(--table-border);
+        }
+
+        td {
+            padding: 12px 10px;
+            border: 1px solid var(--table-border);
+            color: var(--text-dark);
+            vertical-align: middle;
+            font-size: 0.95em;
+        }
+
+        /* زر الدخول الأخضر مثل الصورة */
+        .btn-entry {
+            display: inline-block;
+            background-color: var(--green-btn);
+            color: white;
+            text-decoration: none;
+            padding: 5px 15px;
+            border-radius: 3px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-entry:hover {
+            background-color: #218838;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--header-bg);
+            font-weight: bold;
+        }
+
+        /* تنسيق خاص لاسم المادة */
+        .subject-cell {
+            font-weight: bold;
+            color: #000;
+            text-align: right;
+            padding-right: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="table-container">
+        <div id="loading">جاري مزامنة الجدول مع Google Sheets...</div>
+        <table id="schedule-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>المبحث</th>
+                    <th>المعلم</th>
+                    <th>بدء</th>
+                    <th>نهاية</th>
+                    <th>رابط</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        // ضع رابط الـ CSV المباشر من Google Sheets هنا
+        const csvUrl = "رابط_CSV_الخاص_بك_هنا";
+
+        async function loadData() {
+            try {
+                const response = await fetch(csvUrl);
+                const data = await response.text();
+                const rows = data.split('\n').slice(1);
+                
+                const tableBody = document.getElementById('table-body');
+                const table = document.getElementById('schedule-table');
+                const loading = document.getElementById('loading');
+                
+                tableBody.innerHTML = '';
+
+                rows.forEach((row, index) => {
+                    const col = row.split(',');
+                    // الترتيب: [0]المعلم، [1]المادة، [2]الصف، [3]الفترة، [4]بدء، [5]نهاية، [6]الرابط
+                    if (col.length >= 7 && col[1].trim() !== "") {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="subject-cell">${index + 1}- ${col[1]}</td>
+                            <td>${col[0]}</td>
+                            <td dir="ltr">${col[4]}</td>
+                            <td dir="ltr">${col[5]}</td>
+                            <td>
+                                <a href="${col[6].trim()}" target="_blank" class="btn-entry">دخول</a>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    }
+                });
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+            } catch (error) {
+                document.getElementById('loading').innerText = "خطأ: تأكد من صلاحيات رابط Google Sheets";
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
