@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة العنقود الرقمية</title>
+    <title>منصة العنقود الرقمية v2.7</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -12,14 +12,23 @@
         }
 
         body.dark-mode { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --gray: #94a3b8; --border: #334155; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100vh; transition: 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; min-height: 100vh; transition: 0.3s; overflow-x: hidden; }
 
         .top-bar { background: var(--card); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; border-bottom: 1px solid var(--border); }
         .live-date, .live-clock { font-weight: bold; color: var(--primary); font-size: 0.85rem; }
         #userBadge { background: var(--primary); color: white; padding: 3px 12px; border-radius: 20px; font-size: 0.7rem; margin-left: 8px; display: none; }
         .theme-toggle { cursor: pointer; font-size: 1.2rem; color: var(--gray); transition: 0.3s; margin-right: 15px; }
 
-        .welcome-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 90vh; padding: 20px; }
+        /* --- تصميم شريط الإعلانات الجديد --- */
+        .ticker-wrap { width: 100%; overflow: hidden; background: var(--warning); color: #fff; padding: 8px 0; font-weight: bold; border-bottom: 2px solid rgba(0,0,0,0.1); }
+        .ticker { display: inline-block; white-space: nowrap; padding-right: 100%; animation: ticker 25s linear infinite; }
+        @keyframes ticker {
+            0% { transform: translate3d(100%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
+        }
+        .ticker-item { display: inline-block; padding: 0 20px; font-size: 0.9rem; }
+
+        .welcome-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
         .welcome-frame { background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%); padding: 12px; border-radius: 40px; width: 100%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
         .auth-card { background: var(--card); padding: 30px 20px; border-radius: 32px; text-align: center; }
 
@@ -35,22 +44,15 @@
         .btn-exit { background: var(--danger); color: white; box-shadow: 0 6px 0 var(--danger-dark); }
 
         .btn-status-active { background: var(--success) !important; color: white !important; box-shadow: 0 6px 0 #059669 !important; animation: pulse 2s infinite; }
-        .btn-status-upcoming { background: var(--warning) !important; color: white !important; box-shadow: 0 6px 0 #d97706 !important; opacity: 0.9; }
-        .btn-status-expired { background: var(--gray) !important; color: white !important; box-shadow: 0 6px 0 #64748b !important; cursor: not-allowed; opacity: 0.6; }
+        .btn-status-upcoming { background: var(--warning) !important; color: white !important; box-shadow: 0 6px 0 #d97706 !important; }
         
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
-        #connAlert { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); background: var(--danger); color: white; padding: 10px 20px; border-radius: 30px; display: none; z-index: 9999; font-weight: bold; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); border: 2px solid white; }
-
         #mainApp { display: none; padding: 20px; padding-bottom: 100px; }
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 5000; }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 25px; text-align: center; width: 300px; }
-
         .admin-stats-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 20px; text-align: center; }
         .admin-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; background: var(--card); }
-        .admin-table th { background: rgba(0,0,0,0.02); padding: 10px; border-bottom: 2px solid var(--border); }
-        .admin-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: center; }
+        .admin-table th, .admin-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: center; }
 
         .quick-links-bar { background: var(--card); padding: 12px; display: flex; justify-content: center; gap: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; z-index: 2000; }
         .q-link { text-decoration: none; color: var(--text); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
@@ -58,14 +60,18 @@
 </head>
 <body>
 
-<div id="connAlert"><i class="fas fa-wifi-slash"></i> ضعف في الاتصال.. جاري إعادة المزامنة</div>
-
 <div class="top-bar">
     <div class="live-date" id="dateDisplay">--/--/----</div>
     <div style="display: flex; align-items: center;">
         <i class="fas fa-moon theme-toggle" onclick="toggleTheme()" id="themeIcon"></i>
         <span id="userBadge"></span>
         <div class="live-clock" id="clockDisplay">00:00:00</div>
+    </div>
+</div>
+
+<div class="ticker-wrap" id="tickerSection" style="display: none;">
+    <div class="ticker">
+        <span class="ticker-item" id="tickerText">جاري تحميل آخر الأخبار والتعميمات...</span>
     </div>
 </div>
 
@@ -82,16 +88,15 @@
             <div class="designer-tag">تصميم: م. سامي غنام</div>
             <input type="text" id="sysPass" placeholder="أدخل رمز الدخول">
             <button class="btn btn-primary" onclick="handleLogin()">دخول للمنصة</button>
-            <button class="btn btn-exit" onclick="showExitModal()">خروج نهائي</button>
         </div>
     </div>
 </div>
 
 <div id="mainApp">
     <div id="adminStatsArea" style="display:none;" class="admin-stats-container">
-        <div class="stat-card"><i class="fas fa-clock"></i><br><span id="statActiveCount" style="font-weight:900;">0</span><br><small>جارية</small></div>
-        <div class="stat-card"><i class="fas fa-check-double"></i><br><span id="statDoneCount" style="font-weight:900;">0</span><br><small>منتهية</small></div>
-        <div class="stat-card"><i class="fas fa-chart-pie"></i><br><span id="statProgress" style="font-weight:900;">0%</span><br><small>الإنجاز</small></div>
+        <div class="stat-card"><i class="fas fa-clock"></i><br><span id="statActiveCount">0</span><br><small>جارية</small></div>
+        <div class="stat-card"><i class="fas fa-check-double"></i><br><span id="statDoneCount">0</span><br><small>منتهية</small></div>
+        <div class="stat-card"><i class="fas fa-chart-pie"></i><br><span id="statProgress">0%</span><br><small>الإنجاز</small></div>
     </div>
 
     <div class="welcome-frame">
@@ -116,11 +121,6 @@
                     <option value="و">شعبة و</option>
                 </select>
             </div>
-
-            <div id="adminTeacherFilter" style="display:none; margin-top:5px;">
-                <select id="teacherSelect" onchange="updateUI()"></select>
-            </div>
-
             <div id="displayArea" style="margin-top: 15px; width: 100%;"></div>
         </div>
     </div>
@@ -128,34 +128,18 @@
 
 <div class="quick-links-bar">
     <div class="q-link" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</div>
-    <div class="q-link" onclick="alert('تعليمات: كلمة السر للطالب 1')"><i class="fas fa-info-circle"></i> تعليمات</div>
-    <div class="q-link" onclick="alert('منصة العنقود v2.6 - م. سامي غنام')"><i class="fas fa-code"></i> حول</div>
     <div class="q-link" onclick="window.open('https://wa.me/970599000000')"> <i class="fab fa-whatsapp"></i> راسلنا</div>
-</div>
-
-<div id="logoutModal" class="modal-overlay">
-    <div class="modal-content">
-        <h3>خروج نهائي؟</h3>
-        <div style="display:flex; gap:10px; margin-top:20px;">
-            <button class="btn btn-primary" onclick="closeExitModal()" style="background:#ccc; box-shadow:none;">إلغاء</button>
-            <button class="btn btn-exit" onclick="confirmHardReset()" style="box-shadow:none;">نعم</button>
-        </div>
-    </div>
 </div>
 
 <script>
     let rawData = [];
-    let isFetching = false;
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRa-upd7Oa8Ma0r3PaX0XoZdvLhz9kkCXayodb3FDbbYT-W0k6SHC3GKN1-sXz75O7BIbE2FE5lBO-k/pub?gid=0&single=true&output=csv';
     const weekDaysArr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
 
-    // دالة تحويل الأرقام العربية إلى إنجليزية لضمان المطابقة البرمجية
     function convertNumbers(str) {
         const arabic = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
         if (typeof str === 'string') {
-            for (let i = 0; i < 10; i++) {
-                str = str.replace(arabic[i], i);
-            }
+            for (let i = 0; i < 10; i++) str = str.replace(arabic[i], i);
         }
         return str;
     }
@@ -168,42 +152,32 @@
     setInterval(updateClock, 1000);
 
     async function loadData() {
-        if(isFetching) return;
-        isFetching = true;
-        const alertBox = document.getElementById('connAlert');
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => { controller.abort(); alertBox.style.display = 'block'; }, 8000);
-
         try {
-            const r = await fetch(sheetURL + '&t=' + Date.now(), { signal: controller.signal });
+            const r = await fetch(sheetURL + '&t=' + Date.now());
             const t = await r.text();
-            clearTimeout(timeoutId);
-            alertBox.style.display = 'none';
+            const lines = t.split('\n').filter(row => row.trim() !== "");
+            
+            // تحديث شريط الإعلانات: نفترض أن النص موجود في الخلية الأولى من الصف الأخير في الجدول
+            // أو يمكنك تخصيص خلية معينة. هنا سنأخذ أول خلية من أول صف بيانات كمثال للإعلان
+            if(lines.length > 1) {
+                const firstRow = lines[1].split(',');
+                // سنفترض أننا سنضع الإعلان في عمود جديد أو نستخدم قيمة ثابتة حالياً
+                // للتجربة: سأجعل الإعلان هو آخر رسالة في الجدول
+                const lastRow = lines[lines.length-1].split(',');
+                document.getElementById('tickerText').innerText = "📢 تنبيه: " + (lastRow[0] || "مرحباً بكم في منصة العنقود الرقمية");
+                document.getElementById('tickerSection').style.display = 'block';
+            }
 
-            rawData = t.split('\n').slice(1).filter(row => row.trim() !== "").map(row => {
+            rawData = lines.slice(1).map(row => {
                 const c = row.split(',');
-                return { 
-                    day: c[0]?.trim(), 
-                    grade: c[1]?.trim(), 
-                    section: c[2]?.trim() || "أ",
-                    sub: c[3]?.trim(), 
-                    teacher: c[4]?.trim(), 
-                    s: c[5]?.trim(), 
-                    e: c[6]?.trim(), 
-                    link: c[7]?.trim() 
-                };
+                return { day: c[0]?.trim(), grade: c[1]?.trim(), section: c[2]?.trim() || "أ", sub: c[3]?.trim(), teacher: c[4]?.trim(), s: c[5]?.trim(), e: c[6]?.trim(), link: c[7]?.trim() };
             });
-            if(sessionStorage.getItem('userRole') === 'ادارة واشراف') fillTeachers();
             updateUI();
-        } catch(e) { alertBox.style.display = 'block'; } finally { isFetching = false; }
+        } catch(e) { console.error("خطأ في التحميل"); }
     }
-    setInterval(loadData, 30000);
 
     function handleLogin() {
-        let passInput = document.getElementById('sysPass').value.trim();
-        // معالجة المدخلات لتحويل الأرقام العربية قبل الفحص
-        let pass = convertNumbers(passInput);
-        
+        let pass = convertNumbers(document.getElementById('sysPass').value.trim());
         let role = '';
         if(pass === "1") role = 'طالب';
         else if(pass === "1111") role = 'معلم';
@@ -220,11 +194,8 @@
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('userBadge').innerText = role;
         document.getElementById('userBadge').style.display = 'inline-block';
-        document.getElementById('portalTitle').innerText = 'بوابة ' + role;
-        if(role === 'ادارة واشراف') {
-            document.getElementById('adminTeacherFilter').style.display = 'block';
-            document.getElementById('adminStatsArea').style.display = 'grid';
-        }
+        if(role === 'ادارة واشراف') document.getElementById('adminStatsArea').style.display = 'grid';
+        
         const ds = document.getElementById('daySelect');
         ds.innerHTML = '';
         weekDaysArr.forEach(d => ds.innerHTML += `<option value="${d}">${d}</option>`);
@@ -237,104 +208,34 @@
         const day = document.getElementById('daySelect').value;
         const grade = document.getElementById('gradeSelect').value;
         const section = document.getElementById('sectionSelect').value || "أ";
-        const role = sessionStorage.getItem('userRole');
-        const teacher = (role === 'ادارة واشراف') ? document.getElementById('teacherSelect').value : "";
         const now = new Date();
         const curMins = now.getHours() * 60 + now.getMinutes();
         const isToday = (weekDaysArr[now.getDay()] === day);
 
-        let filtered = rawData.filter(i => 
-            i.day === day && 
-            (grade === "" || i.grade === grade) && 
-            (section === "" || i.section === section) &&
-            (teacher === "" || i.teacher === teacher)
-        );
+        let filtered = rawData.filter(i => i.day === day && (grade === "" || i.grade === grade) && (section === "" || i.section === section));
 
-        if (role !== 'ادارة واشراف' && isToday) {
-            filtered = filtered.filter(l => curMins <= timeToVal(l.e) + 5);
-            filtered.sort((a, b) => {
-                const startA = timeToVal(a.s), endA = timeToVal(a.e);
-                const startB = timeToVal(b.s), endB = timeToVal(b.e);
-                const activeA = (curMins >= startA - 5 && curMins <= endA + 5);
-                const activeB = (curMins >= startB - 5 && curMins <= endB + 5);
-                if (activeA && !activeB) return -1;
-                if (!activeA && activeB) return 1;
-                return startA - startB;
-            });
-        }
+        area.innerHTML = filtered.length === 0 ? "<div style='text-align:center; padding:20px; color:var(--gray)'>لا توجد حصص مجدولة</div>" : "";
+        filtered.forEach(l => {
+            const start = timeToVal(l.s), end = timeToVal(l.e);
+            let statusClass = 'btn-status-upcoming', btnText = 'انتظر الموعد', canOpen = false;
+            if(isToday && curMins >= start-5 && curMins <= end+5) { statusClass = 'btn-status-active'; btnText = 'دخول الحصة الآن'; canOpen = true; }
 
-        if(role === 'ادارة واشراف') {
-            let html = `<table class="admin-table"><thead><tr><th>الحصة</th><th>الوقت</th><th>الشعبة</th><th>الحالة</th></tr></thead><tbody>`;
-            filtered.forEach(l => {
-                const start = timeToVal(l.s), end = timeToVal(l.e);
-                let status = 'انتظار', color = 'var(--gray)';
-                if(isToday) {
-                    if(curMins >= start-5 && curMins <= end+5) { status = 'جارية'; color = 'var(--success)'; }
-                    else if(curMins < start) { status = 'قادمة'; color = 'var(--warning)'; }
-                    else { status = 'منتهية'; color = 'var(--danger)'; }
-                }
-                html += `<tr><td><b>${l.sub}</b><br><small>${l.teacher}</small></td><td>${l.s}-${l.e}</td><td>${l.section}</td><td style="color:${color};font-weight:bold">${status}</td></tr>`;
-            });
-            area.innerHTML = html + "</tbody></table>";
-            updateStats(filtered, isToday, curMins);
-        } else {
-            area.innerHTML = filtered.length === 0 ? "<div style='text-align:center; padding:20px; color:var(--gray)'>لا توجد حصص حالية أو قادمة</div>" : "";
-            filtered.forEach(l => {
-                const start = timeToVal(l.s), end = timeToVal(l.e);
-                let statusClass = 'btn-status-upcoming', btnText = 'انتظر الموعد', canOpen = false;
-                let cardStyle = "background:var(--card); border:1px solid var(--border);";
-
-                if(isToday) {
-                    if(curMins >= start-5 && curMins <= end+5) { 
-                        statusClass = 'btn-status-active'; btnText = 'دخول الحصة الآن'; canOpen = true; 
-                        cardStyle = "background:rgba(16, 185, 129, 0.05); border:2px solid var(--success);";
-                    }
-                }
-
-                area.innerHTML += `<div style="${cardStyle} padding:15px; border-radius:20px; margin-bottom:10px; text-align:right;">
-                    <b>${l.sub} - شعبة (${l.section})</b> <span style="float:left; color:var(--primary)">${l.s} - ${l.e}</span><br>
-                    <small>المعلم: ${l.teacher} | الصف: ${l.grade}</small>
-                    <button class="btn ${statusClass}" style="margin-top:10px;" ${canOpen ? `onclick="window.open('${l.link}')"` : 'disabled'}>
-                        ${btnText}
-                    </button>
-                </div>`;
-            });
-        }
-    }
-
-    function updateStats(data, isToday, curMins) {
-        if(!isToday) { 
-            document.getElementById('statActiveCount').innerText = "-"; 
-            document.getElementById('statDoneCount').innerText = "-";
-            document.getElementById('statProgress').innerText = "0%";
-            return; 
-        }
-        const active = data.filter(i => curMins >= timeToVal(i.s)-5 && curMins <= timeToVal(i.e)+5).length;
-        const done = data.filter(i => curMins > timeToVal(i.e)+5).length;
-        document.getElementById('statActiveCount').innerText = active;
-        document.getElementById('statDoneCount').innerText = done;
-        document.getElementById('statProgress').innerText = data.length ? Math.round((done/data.length)*100) + "%" : "0%";
-    }
-
-    function fillTeachers() {
-        const ts = document.getElementById('teacherSelect');
-        const list = [...new Set(rawData.map(i => i.teacher))].filter(n => n);
-        ts.innerHTML = '<option value="">كل المعلمين</option>';
-        list.forEach(t => ts.innerHTML += `<option value="${t}">${t}</option>`);
+            area.innerHTML += `<div style="background:var(--card); border:1px solid var(--border); padding:15px; border-radius:20px; margin-bottom:10px; text-align:right;">
+                <b>${l.sub} - شعبة (${l.section})</b><br>
+                <small>${l.teacher} | ${l.s} - ${l.e}</small>
+                <button class="btn ${statusClass}" style="margin-top:10px;" ${canOpen ? `onclick="window.open('${l.link}')"` : 'disabled'}>${btnText}</button>
+            </div>`;
+        });
     }
 
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
-        const icon = document.getElementById('themeIcon');
-        icon.className = document.body.classList.contains('dark-mode') ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
+        document.getElementById('themeIcon').className = document.body.classList.contains('dark-mode') ? 'fas fa-sun theme-toggle' : 'fas fa-moon theme-toggle';
     }
 
     function timeToVal(t) { if(!t) return 0; const c = t.split(':'); return parseInt(c[0])*60 + parseInt(c[1]); }
     function handleLogout() { sessionStorage.clear(); location.reload(); }
-    function showExitModal() { document.getElementById('logoutModal').style.display = 'flex'; }
-    function closeExitModal() { document.getElementById('logoutModal').style.display = 'none'; }
-    function confirmHardReset() { sessionStorage.clear(); window.location.replace("https://www.google.ps"); }
-    window.onload = () => { updateClock(); if(sessionStorage.getItem('isLoggedIn')) showApp(); };
+    window.onload = () => { if(sessionStorage.getItem('isLoggedIn')) showApp(); else updateClock(); };
 </script>
 </body>
 </html>
