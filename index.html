@@ -129,7 +129,7 @@
 <div class="quick-links-bar">
     <div class="q-link" onclick="loadData()"><i class="fas fa-sync-alt"></i> تحديث</div>
     <div class="q-link" onclick="alert('تعليمات: كلمة السر للطالب 1')"><i class="fas fa-info-circle"></i> تعليمات</div>
-    <div class="q-link" onclick="alert('منصة العنقود v2.5 - م. سامي غنام')"><i class="fas fa-code"></i> حول</div>
+    <div class="q-link" onclick="alert('منصة العنقود v2.6 - م. سامي غنام')"><i class="fas fa-code"></i> حول</div>
     <div class="q-link" onclick="window.open('https://wa.me/970599000000')"> <i class="fab fa-whatsapp"></i> راسلنا</div>
 </div>
 
@@ -148,6 +148,17 @@
     let isFetching = false;
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRa-upd7Oa8Ma0r3PaX0XoZdvLhz9kkCXayodb3FDbbYT-W0k6SHC3GKN1-sXz75O7BIbE2FE5lBO-k/pub?gid=0&single=true&output=csv';
     const weekDaysArr = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+
+    // دالة تحويل الأرقام العربية إلى إنجليزية لضمان المطابقة البرمجية
+    function convertNumbers(str) {
+        const arabic = [/٠/g, /١/g, /٢/g, /٣/g, /٤/g, /٥/g, /٦/g, /٧/g, /٨/g, /٩/g];
+        if (typeof str === 'string') {
+            for (let i = 0; i < 10; i++) {
+                str = str.replace(arabic[i], i);
+            }
+        }
+        return str;
+    }
 
     function updateClock() {
         const now = new Date();
@@ -189,7 +200,10 @@
     setInterval(loadData, 30000);
 
     function handleLogin() {
-        const pass = document.getElementById('sysPass').value.trim();
+        let passInput = document.getElementById('sysPass').value.trim();
+        // معالجة المدخلات لتحويل الأرقام العربية قبل الفحص
+        let pass = convertNumbers(passInput);
+        
         let role = '';
         if(pass === "1") role = 'طالب';
         else if(pass === "1111") role = 'معلم';
@@ -236,12 +250,8 @@
             (teacher === "" || i.teacher === teacher)
         );
 
-        // --- نظام Auto-Focus الذكي للطالب والمعلم ---
         if (role !== 'ادارة واشراف' && isToday) {
-            // 1. إخفاء الحصص التي انتهت تماماً (بعد 5 دقائق من نهايتها)
             filtered = filtered.filter(l => curMins <= timeToVal(l.e) + 5);
-            
-            // 2. ترتيب القائمة لجعل الحصة الجارية في الأعلى
             filtered.sort((a, b) => {
                 const startA = timeToVal(a.s), endA = timeToVal(a.e);
                 const startB = timeToVal(b.s), endB = timeToVal(b.e);
