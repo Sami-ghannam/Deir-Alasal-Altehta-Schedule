@@ -293,7 +293,7 @@
     }
 
     function handleLogout() { sessionStorage.removeItem('isLoggedIn'); window.location.reload(); }
-    function confirmFinalExit() { Swal.fire({ title: 'خروج نهائي؟', text: "سيتم مسح الجلسة الحالية", icon: 'warning', showCancelButton: true }).then((r) => { if(r.isConfirmed) { sessionStorage.clear(); window.location.replace("https://www.google.com"); } }); }
+    function confirmFinalExit() { Swal.fire({ title: 'خروج نهائي؟', text: "هل أنت متأكد!", icon: 'warning', showCancelButton: true }).then((r) => { if(r.isConfirmed) { sessionStorage.clear(); window.location.replace("https://www.google.com"); } }); }
 
     function updateClock() {
         const now = new Date();
@@ -301,7 +301,7 @@
         if(document.getElementById('dateDisplay')) document.getElementById('dateDisplay').innerText = now.toLocaleDateString('ar-EG', {weekday:'short', day:'numeric', month:'short'});
         if(now.getSeconds() === 0 && sessionStorage.getItem('isLoggedIn')) { updateUI(); updateTickerWithHonorRoll(); }
     }
-    function showAbout() { Swal.fire('م. سامي غنام', 'منصة العنقود v2.9.5\nنظام الإعلانات المدمج والتحفيز الذكي', 'info'); }
+    function showAbout() { Swal.fire(' م. سامي غنام' , 'منصة العنقود الرقمية التجريبية v1.0.1\n نظام التعلم الالكتروني والتحفيز الذكي', 'info'); }
 
     setInterval(updateClock, 1000);
     window.onload = () => { if(sessionStorage.getItem('isLoggedIn')) showApp(); else updateClock(); };
